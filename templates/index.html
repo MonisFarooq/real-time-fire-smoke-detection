@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Early Fire & Smoke Sentinel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #121826;
+      --border: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #f97316;
+      --primary-hover: #ea580c;
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.15);
+      --safe: #10b981;
+      --safe-bg: rgba(16, 185, 129, 0.15);
+      --standby: #64748b;
+      --standby-bg: rgba(100, 116, 139, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.1rem 2.5rem;
+      background: #0f1523;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand span {
+      color: var(--primary);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+
+    .badge-safe {
+      background: var(--safe-bg);
+      color: #34d399;
+      border: 1px solid var(--safe);
+    }
+
+    .badge-danger {
+      background: var(--danger-bg);
+      color: #f87171;
+      border: 1px solid var(--danger);
+      animation: alertPulse 1.2s infinite;
+    }
+
+    .badge-standby {
+      background: var(--standby-bg);
+      color: #cbd5e1;
+      border: 1px solid var(--standby);
+    }
+
+    @keyframes alertPulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 2rem;
+      padding: 2.5rem;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    @media (max-width: 992px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding: 1.5rem;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .cam-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-cam {
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-cam:hover { opacity: 0.85; }
+
+    .btn-start {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .btn-stop {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .standby-screen {
+      position: absolute;
+      inset: 0;
+      background: #060911;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .standby-icon {
+      font-size: 2.8rem;
+    }
+
+    .alarm-banner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(220, 38, 38, 0.95);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 0.75rem;
+      letter-spacing: 0.06em;
+      backdrop-filter: blur(4px);
+    }
+
+    .upload-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .dropzone {
+      border: 2px dashed #334155;
+      border-radius: 14px;
+      padding: 2.8rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      background: #0a0f1d;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .dropzone:hover {
+      border-color: var(--primary);
+      background: #101728;
+    }
+
+    .dropzone input {
+      display: none;
+    }
+
+    .dropzone-icon {
+      font-size: 2.4rem;
+    }
+
+    .dropzone-text {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .btn {
+      padding: 0.85rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: var(--primary-hover); }
+
+    .result-container {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      background: #0a0f1d;
+      padding: 1.25rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .result-container img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .result-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .result-details p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .result-details p strong { color: var(--text); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="brand">🔥 <span>Fire & Smoke Sentinel</span></div>
+    <div id="live-badge" class="badge badge-standby">CAMERA OFF</div>
+  </header>
+
+  <main class="container">
+    <!-- Camera Section -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Live Surveillance Feed</h2>
+        <div class="cam-controls">
+          <button id="start-btn" class="btn-cam btn-start" onclick="startCamera()">▶ Start Cam</button>
+          <button id="stop-btn" class="btn-cam btn-stop" onclick="stopCamera()" disabled style="opacity: 0.5;">⏹ Stop Cam</button>
+        </div>
+      </div>
+      <div class="video-wrapper">
+        <img id="video-stream" src="" class="hidden" alt="Surveillance Stream" />
+        
+        <div id="standby-screen" class="standby-screen">
+          <div class="standby-icon">📹</div>
+          <p>Camera is currently inactive</p>
+          <small>Click "Start Cam" above to begin live analysis</small>
+        </div>
+
+        <div id="alarm-overlay" class="alarm-banner hidden">
+          ⚠️ HAZARD DETECTED: FIRE / SMOKE
+        </div>
+      </div>
+    </section>
+
+    <!-- Static Image Inspector -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Static Image Inspector</h2>
+      </div>
+
+      <form id="upload-form" class="upload-form" enctype="multipart/form-data">
+        <label for="image-input" class="dropzone">
+          <input type="file" id="image-input" name="image" accept="image/*" required>
+          <div class="dropzone-icon">📁</div>
+          <span id="dropzone-text" class="dropzone-text">Click or drag an image here to scan</span>
+        </label>
+        <button type="submit" class="btn">Analyze Image</button>
+      </form>
+
+      <div id="result-container" class="result-container hidden">
+        <img id="result-img" src="" alt="Test Image" />
+        <div class="result-details">
+          <p><strong>Status:</strong> <span id="res-hazard" class="badge"></span></p>
+          <p><strong>Classification:</strong> <span id="res-class">-</span></p>
+          <p><strong>Confidence:</strong> <span id="res-conf">-</span></p>
+          <p><strong>Timestamp:</strong> <span id="res-time">-</span></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function formatLabel(label) {
+      const mapping = {
+        'nofire': 'Normal (Safe)',
+        'fire': 'Active Fire',
+        'smoke': 'Visible Smoke',
+        'smokefire': 'Fire & Smoke Blaze',
+        'offline': 'Inactive'
+      };
+      return mapping[label.toLowerCase()] || label.toUpperCase();
+    }
+
+    const liveBadge = document.getElementById('live-badge');
+    const alarmOverlay = document.getElementById('alarm-overlay');
+    const videoStream = document.getElementById('video-stream');
+    const standbyScreen = document.getElementById('standby-screen');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+
+    let isCamRunning = false;
+
+    async function startCamera() {
+      const res = await fetch('/start_cam', { method: 'POST' });
+      if (res.ok) {
+        isCamRunning = true;
+        videoStream.src = "/video_feed?" + new Date().getTime();
+        videoStream.classList.remove('hidden');
+        standbyScreen.classList.add('hidden');
+
+        startBtn.disabled = true;
+        startBtn.style.opacity = "0.5";
+        stopBtn.disabled = false;
+        stopBtn.style.opacity = "1";
+      }
+    }
+
+    async function stopCamera() {
+      const res = await fetch('/stop_cam', { method: 'POST' });
+      if (res.ok) {
+        isCamRunning = false;
+        videoStream.src = "";
+        videoStream.classList.add('hidden');
+        standbyScreen.classList.remove('hidden');
+        alarmOverlay.classList.add('hidden');
+
+        liveBadge.className = 'badge badge-standby';
+        liveBadge.innerText = 'CAMERA OFF';
+
+        startBtn.disabled = false;
+        startBtn.style.opacity = "1";
+        stopBtn.disabled = true;
+        stopBtn.style.opacity = "0.5";
+      }
+    }
+
+    // Status polling
+    setInterval(async () => {
+      if (!isCamRunning) return;
+
+      try {
+        const response = await fetch('/status');
+        const data = await response.json();
+
+        if (data.status === 'ALERT') {
+          liveBadge.className = 'badge badge-danger';
+          liveBadge.innerText = `CRITICAL: ${formatLabel(data.label)} (${data.confidence}%)`;
+          alarmOverlay.classList.remove('hidden');
+        } else if (data.status === 'SAFE') {
+          liveBadge.className = 'badge badge-safe';
+          liveBadge.innerText = `MONITORING: SAFE (${data.confidence}%)`;
+          alarmOverlay.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 1000);
+
+    // Image upload handler
+    const uploadForm = document.getElementById('upload-form');
+    const imageInput = document.getElementById('image-input');
+    const dropzoneText = document.getElementById('dropzone-text');
+    const resultContainer = document.getElementById('result-container');
+
+    imageInput.addEventListener('change', () => {
+      if (imageInput.files[0]) {
+        dropzoneText.innerText = imageInput.files[0].name;
+      }
+    });
+
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!imageInput.files[0]) return;
+
+      const formData = new FormData();
+      formData.append('image', imageInput.files[0]);
+
+      try {
+        const res = await fetch('/predict_image', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          resultContainer.classList.remove('hidden');
+          document.getElementById('result-img').src = data.image_url;
+          document.getElementById('res-class').innerText = formatLabel(data.label);
+          document.getElementById('res-conf').innerText = data.confidence;
+          document.getElementById('res-time').innerText = data.timestamp;
+
+          const badge = document.getElementById('res-hazard');
+          if (data.is_hazard) {
+            badge.className = 'badge badge-danger';
+            badge.innerText = 'HAZARD DETECTED';
+          } else {
+            badge.className = 'badge badge-safe';
+            badge.innerText = 'NORMAL (NO HAZARD)';
+          }
+        } else {
+          alert(data.error || 'Prediction failed');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

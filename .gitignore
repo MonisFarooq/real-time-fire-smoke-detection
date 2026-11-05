@@ -1,0 +1,20 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.ipynb_checkpoints/
+
+# Virtual environment (if any)
+venv/
+env/
+.env
+
+# Large dataset directory
+DataSet/
+
+# Uploaded test files
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Large trained weights (optional: push only if under 100MB, otherwise exclude)
+# best_fire_detector.keras
